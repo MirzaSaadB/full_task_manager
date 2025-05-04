@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Tasks</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+
+<div class="container">
+
+	
+	
+    <h2>My Tasks</h2>
+
+    <form id="taskForm">
+    	
+        <input type="text" id="taskInput" placeholder="Enter new task..." required>
+        <button type="submit">Add Task</button>
+        
+    </form>
+
+    <table id="taskTable">
+        <thead>
+        <tr>
+            <th>Task</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <button onclick="logout()" style="margin-top: 20px;">Logout</button>
+</div>
+
+<script>
+    const userId = localStorage.getItem("userId");
+
+    async function fetchTasks() {
+        const res = await fetch(`http://localhost:8080/tasks/user/${userId}`);
+        const tasks = await res.json();
+        const tableBody = document.querySelector("#taskTable tbody");
+        tableBody.innerHTML = "";
+
+        tasks.forEach(task => {
+            const row = document.createElement("tr");
+
+            const taskCell = document.createElement("td");
+            taskCell.textContent = task.title;
+
+            const actionCell = document.createElement("td");
+            actionCell.innerHTML = `
+                <button onclick="editTask(${task.id})">Edit</button>
+                <button onclick="deleteTask(${task.id})">Delete</button>
+            `;
+
+            row.appendChild(taskCell);
+            row.appendChild(actionCell);
+            tableBody.appendChild(row);
+        });
+    }
+
+    async function deleteTask(id) {
+        await fetch(`http://localhost:8080/tasks/${id}`, { method: "DELETE" });
+        fetchTasks();
+    }
+
+    function editTask(id) {
+        window.location.href = `update.html?id=${id}`;
+    }
+
+    document.getElementById("taskForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const title = document.getElementById("taskInput").value;
+
+        await fetch("http://localhost:8080/tasks", {
+            method: "POST",
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ title, user: { id: userId } })
+        });
+
+        document.getElementById("taskInput").value = "";
+        fetchTasks();
+    });
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = "login.html";
+    }
+
+    fetchTasks();
+</script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Update Task</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+    <h2>Update Task</h2>
+    <form id="updateForm">
+        <input type="text" id="title" placeholder="Updated Task Title" required>
+        <button type="submit">Update</button>
+    </form>
+    <button onclick="goBack()">Cancel</button>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const taskId = urlParams.get('id');
+
+    async function loadTask() {
+        const res = await fetch(`http://localhost:8080/tasks/${taskId}`);
+        const task = await res.json();
+        document.getElementById("title").value = task.title;
+    }
+
+    document.getElementById("updateForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const updatedTitle = document.getElementById("title").value;
+        const userId = localStorage.getItem("userId");
+
+        await fetch(`http://localhost:8080/tasks`, {
+            method: "PUT",
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                id: taskId,
+                title: updatedTitle,
+                user: { id: userId }
+            })
+        });
+
+        window.location.href = "task.html";
+    });
+
+    function goBack() {
+        window.location.href = "task.html";
+    }
+
+    loadTask();
+</script>
+</body>
+</html>
